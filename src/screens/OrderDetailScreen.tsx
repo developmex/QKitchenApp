@@ -14,7 +14,12 @@ export default function OrderDetailScreen({ route }: any) {
     (async () => {
       try {
         const res = await api.getOrder(orderId);
-        setOrder((res.data || res) as Order);
+        const ord = (res.order || res.data || res) as Order;
+        // API devuelve is_pickup como 0/1, no boolean
+        if (typeof ord.is_pickup === 'number') {
+          (ord as any).is_pickup = ord.is_pickup === 1;
+        }
+        setOrder(ord);
       } catch (e) { console.log(e); }
       finally { setLoading(false); }
     })();

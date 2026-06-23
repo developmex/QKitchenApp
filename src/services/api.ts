@@ -89,11 +89,11 @@ class ApiClient {
   }
 
   async getOrder(id: number) {
-    return this.request(`/order/${id}`);
+    return this.request(`/order/detail?id=${id}`);
   }
 
   async updateOrderStatus(orderId: number, statusId: number) {
-    return this.request(`/order/${orderId}`, { method: 'PUT', body: { status_id: statusId } });
+    return this.request('/order', { method: 'PUT', body: { id: orderId, status_id: statusId } });
   }
 
   async createOrder(data: Record<string, unknown>) {
