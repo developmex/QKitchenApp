@@ -1,7 +1,5 @@
 import { useAuthStore } from '../stores/authStore';
 
-// En desarrollo local: cambia a 'http://<tu-ip>:8090/Q-Kitchen/QKitchenApi'
-// En producción: https://qkitchen.app/QKitchenApi (hermes212 con SSL)
 const BASE_URL = 'https://qkitchen.app/Q-Kitchen/QKitchenApi';
 
 interface FetchOptions {
@@ -16,7 +14,7 @@ class ApiClient {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (token) headers['Authorization'] = 'Bearer ' + token;
     if (companyId) headers['X-Company-ID'] = String(companyId);
     return headers;
   }
@@ -33,11 +31,10 @@ class ApiClient {
       fetchOptions.body = JSON.stringify(body);
     }
 
-    const url = `${BASE_URL}${endpoint}`;
+    const url = BASE_URL + endpoint;
     const response = await fetch(url, fetchOptions);
     const data = await response.json();
 
-    // Session expired — force logout
     if (data?.success === false && 
         (data.message?.includes('Invalid or expired session token') ||
          data.error?.includes('Invalid or expired session token'))) {
@@ -46,7 +43,7 @@ class ApiClient {
     }
 
     if (!response.ok) {
-      throw new Error(data?.message || data?.error || `HTTP ${response.status}`);
+      throw new Error(data?.message || data?.error || 'HTTP ' + response.status);
     }
 
     if (data && typeof data === 'object' && 'success' in data && !data.success) {
@@ -56,7 +53,6 @@ class ApiClient {
     return data;
   }
 
-  // ── Auth ──
   async login(email: string, password: string): Promise<any> {
     return this.request('/login', { method: 'POST', body: { email, password } });
   }
@@ -71,25 +67,23 @@ class ApiClient {
 
   async logout() {
     const { token } = useAuthStore.getState();
-    return this.request('/logout', { method: 'POST', headers: token ? { Authorization: *** ${token}` } : {} });
+    return this.request('/logout', { method: 'POST', headers: token ? { Authorization: 'Bearer ' + token } : {} });
   }
 
-  // ── Dashboard ──
   async getDashboard() {
     return this.request<any>('/dashboard/metrics');
   }
 
-  // ── Orders ──
   async getOrders(params?: { date?: string; status?: number }) {
     const qs = new URLSearchParams();
     if (params?.date) qs.set('date', params.date);
     if (params?.status) qs.set('status', String(params.status));
     const query = qs.toString();
-    return this.request<any>(`/order${query ? `?${query}` : ''}`);
+    return this.request<any>('/order' + (query ? '?' + query : ''));
   }
 
   async getOrder(id: number) {
-    return this.request(`/order/detail?id=${id}`);
+    return this.request('/order/detail?id=' + id);
   }
 
   async updateOrderStatus(orderId: number, statusId: number) {
@@ -100,7 +94,6 @@ class ApiClient {
     return this.request('/order', { method: 'POST', body: data });
   }
 
-  // ── Dishes / Menu ──
   async getMenu() {
     return this.request('/menu');
   }
@@ -109,17 +102,14 @@ class ApiClient {
     return this.request('/dish');
   }
 
-  // ── Ingredients ──
   async getIngredients() {
     return this.request('/ingredient');
   }
 
-  // ── Customers ──
   async getCustomers() {
     return this.request('/customer');
   }
 
-  // ── Staff ──
   async getStaff() {
     return this.request('/employee');
   }
