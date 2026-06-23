@@ -24,12 +24,13 @@ export default function LoginScreen() {
     try {
       const res = await api.login(email.trim(), password);
       const data = res.data || res;
-      await setSession(
-        data.access_token || data.token,
-        data.refresh_token,
-        data.user,
-        data.company || { id: 1, name: 'Q-Kitchen', slug: 'qkitchen' }
-      );
+      // API puede devolver access_token, accessToken, o token
+      const tok = data.access_token || data.accessToken || data.token || '';
+      const refTok = data.refresh_token || data.refreshToken || tok;
+      const usr = data.user || {};
+      const comp = data.company || { id: usr.company_id || 1, name: 'Q-Kitchen', slug: data.company_slug || 'qkitchen' };
+      
+      await setSession(tok, refTok, usr, comp);
     } catch (e: any) {
       setError(e.message || 'Error al iniciar sesión');
     } finally {
