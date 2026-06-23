@@ -10,17 +10,17 @@ interface FetchOptions {
 
 class ApiClient {
   private getHeaders(): Record<string, string> {
-    const { token } = useAuthStore.getState();
+    const { token, companyId } = useAuthStore.getState();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
     if (token) headers['Authorization'] = 'Bearer ' + token;
+    if (token && companyId) headers['X-Company-ID'] = String(companyId);
     return headers;
   }
 
   async request<T = any>(endpoint: string, options: FetchOptions = {}): Promise<T> {
     const { method = 'GET', body, headers: extraHeaders } = options;
-    const { companyId } = useAuthStore.getState();
 
     const fetchOptions: RequestInit = {
       method,
@@ -31,12 +31,7 @@ class ApiClient {
       fetchOptions.body = JSON.stringify(body);
     }
 
-    // X-Company-ID como query param para evitar CORS preflight
-    let url = BASE_URL + endpoint;
-    if (companyId && companyId > 0) {
-      const sep = endpoint.includes('?') ? '&' : '?';
-      url += sep + 'company_id=' + companyId;
-    }
+    const url = BASE_URL + endpoint;
     const response = await fetch(url, fetchOptions);
     const data = await response.json();
 
