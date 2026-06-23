@@ -2,8 +2,9 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text } from 'react-native';
+import { Text, View, StyleSheet } from 'react-native';
 import { useAuthStore } from '../stores/authStore';
+import { Colors, Radius } from '../utils/theme';
 import LoginScreen from '../screens/LoginScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import OrdersScreen from '../screens/OrdersScreen';
@@ -11,9 +12,12 @@ import OrdersScreen from '../screens/OrdersScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
+function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focused: boolean }) {
   return (
-    <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>{emoji}</Text>
+    <View style={styles.tabItem}>
+      <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>{emoji}</Text>
+      <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
+    </View>
   );
 }
 
@@ -21,30 +25,25 @@ function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: '#f97316' },
-        headerTintColor: '#fff',
-        headerTitleStyle: { fontWeight: '600' },
-        tabBarActiveTintColor: '#f97316',
-        tabBarInactiveTintColor: '#9ca3af',
-        tabBarStyle: { borderTopColor: '#e5e7eb', paddingBottom: 4, height: 56 },
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: Colors.surface,
+          borderTopColor: Colors.surfaceBorder,
+          height: 64,
+          paddingBottom: 8,
+          paddingTop: 8,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        tabBarShowLabel: false,
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.textMuted,
       }}
     >
-      <Tab.Screen
-        name="Dashboard"
-        component={DashboardScreen}
-        options={{
-          title: 'Inicio',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📊" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Orders"
-        component={OrdersScreen}
-        options={{
-          title: 'Órdenes',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📋" focused={focused} />,
-        }}
-      />
+      <Tab.Screen name="Dashboard" component={DashboardScreen}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" label="Inicio" focused={focused} /> }} />
+      <Tab.Screen name="Orders" component={OrdersScreen}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="📋" label="Órdenes" focused={focused} /> }} />
     </Tab.Navigator>
   );
 }
@@ -55,9 +54,9 @@ export default function AppNavigator() {
 
   if (isLoading) {
     return (
-      <Text style={{ flex: 1, textAlign: 'center', paddingTop: 100, fontSize: 18 }}>
-        Cargando...
-      </Text>
+      <View style={styles.loading}>
+        <Text style={styles.loadingText}>Cargando...</Text>
+      </View>
     );
   }
 
@@ -73,3 +72,13 @@ export default function AppNavigator() {
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: { flex: 1, backgroundColor: Colors.bg, alignItems: 'center', justifyContent: 'center' },
+  loadingText: { fontSize: 16, color: Colors.textMuted },
+  tabItem: { alignItems: 'center', justifyContent: 'center', width: 64 },
+  tabEmoji: { fontSize: 22, opacity: 0.4 },
+  tabEmojiActive: { opacity: 1 },
+  tabLabel: { fontSize: 10, color: Colors.textMuted, marginTop: 2 },
+  tabLabelActive: { color: Colors.primary, fontWeight: '600' },
+});

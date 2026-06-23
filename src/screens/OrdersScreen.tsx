@@ -1,134 +1,95 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity,
-  RefreshControl, Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { api } from '../services/api';
 import { useAuthStore } from '../stores/authStore';
 import type { Order } from '../types';
-import { STATUS_LABELS, STATUS_COLORS } from '../types';
+import { Colors, Radius, Shadows, Spacing, STATUS_LABELS, STATUS_COLORS } from '../utils/theme';
+import StatusBadge from '../components/StatusBadge';
+
+const STATUS_FLOW: Record<number, number> = {
+  1: 2, 2: 3, 3: 5, 5: 6, 6: 7, 7: 8,
+};
 
 export default function OrdersScreen() {
   const role = useAuthStore((s) => s.role);
   const [orders, setOrders] = useState<Order[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<number | null>(null);
+  const [filter, setFilter] = useState<number | null>(null);
 
-  const loadOrders = useCallback(async () => {
+  const load = useCallback(async () => {
     try {
-      const res = await api.getOrders({ date: new Date().toISOString().split('T')[0] });
+      const res = await api.getOrders();
       const list = res.data || res || [];
-      const arr = Array.isArray(list) ? list : list?.orders || [];
-      setOrders(arr);
-    } catch (e) {
-      console.log('Orders load error:', e);
-    }
+      setOrders(Array.isArray(list) ? list : list?.orders || []);
+    } catch (e) { console.log(e); }
   }, []);
 
-  useEffect(() => { loadOrders(); }, [loadOrders]);
-
-  // Auto-refresh cada 30s para cocina (tiempo real)
+  useEffect(() => { load(); }, [load]);
   useEffect(() => {
     if (role !== 'kitchen' && role !== 'admin') return;
-    const timer = setInterval(loadOrders, 30000);
-    return () => clearInterval(timer);
-  }, [role, loadOrders]);
+    const t = setInterval(load, 30000);
+    return () => clearInterval(t);
+  }, [role, load]);
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadOrders();
-    setRefreshing(false);
+  const advance = (id: number, next: number) => {
+    Alert.alert('Cambiar estado', `¿Marcar como "${STATUS_LABELS[next]}"?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Confirmar', onPress: async () => { try { await api.updateOrderStatus(id, next); load(); } catch (e: any) { Alert.alert('Error', e.message); } } },
+    ]);
   };
 
-  const handleStatusChange = async (orderId: number, newStatus: number) => {
-    const statusLabel = STATUS_LABELS[newStatus];
-    Alert.alert(
-      'Cambiar estado',
-      `¿Marcar orden #${orderId} como "${statusLabel}"?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Confirmar',
-          onPress: async () => {
-            try {
-              await api.updateOrderStatus(orderId, newStatus);
-              loadOrders();
-            } catch (e: any) {
-              Alert.alert('Error', e.message || 'No se pudo actualizar');
-            }
-          },
-        },
-      ],
-    );
-  };
-
-  const getNextStatus = (currentStatus: number): { id: number; label: string } | null => {
-    const flow: Record<number, number> = {
-      1: 2,  // Pendiente → Programado
-      2: 3,  // Programado → En proceso
-      3: 5,  // En proceso → Listo para entrega
-      5: 6,  // Listo → En camino
-      6: 7,  // En camino → Entregado (pendiente pago)
-      7: 8,  // Entregado pend. pago → Entregado pagado
-    };
-    const next = flow[currentStatus];
-    return next ? { id: next, label: STATUS_LABELS[next] } : null;
-  };
-
-  const filtered = selectedStatus
-    ? orders.filter((o) => o.status_id === selectedStatus)
-    : orders;
-
-  // Filtros de estado
-  const statusFilters = [1, 2, 3, 5, 6, 7, 8].filter((s) => {
+  const visible = [1, 2, 3, 5, 6, 7, 8].filter(s => {
     if (role === 'kitchen') return [2, 3, 5].includes(s);
     if (role === 'driver') return [5, 6, 7].includes(s);
     return true;
   });
 
+  const filtered = filter ? orders.filter(o => o.status_id === filter) : orders;
+
   const renderOrder = ({ item }: { item: Order }) => {
-    const next = getNextStatus(item.status_id);
-    const canAdvance = next && 
-      ((role === 'kitchen' && [2, 3, 5].includes(next.id)) ||
-       (role === 'driver' && [5, 6, 7].includes(next.id)) ||
-       (role === 'admin'));
+    const nextId = STATUS_FLOW[item.status_id];
+    const canAdvance = nextId && (
+      (role === 'kitchen' && [2, 3, 5].includes(nextId)) ||
+      (role === 'driver' && [5, 6, 7].includes(nextId)) ||
+      role === 'admin'
+    );
 
     return (
       <View style={styles.card}>
-        <View style={styles.header}>
+        <View style={styles.cardHeader}>
           <View>
-            <Text style={styles.orderId}>#{item.id}</Text>
+            <Text style={styles.orderId}>Pedido #{item.id}</Text>
             <Text style={styles.customer}>{item.customer_name || 'Cliente'}</Text>
           </View>
-          <View style={[styles.badge, { backgroundColor: STATUS_COLORS[item.status_id] || '#6b7280' }]}>
-            <Text style={styles.badgeText}>{STATUS_LABELS[item.status_id] || '?'}</Text>
-          </View>
+          <StatusBadge statusId={item.status_id} />
         </View>
 
-        <View style={styles.details}>
-          <Text style={styles.detail}>🕐 {item.delivery_time?.substring(0, 5) || '12:00'}</Text>
-          <Text style={styles.detail}>👥 {item.diners_count} comensales</Text>
-          <Text style={styles.detail}>📦 {item.is_pickup ? 'Recoger' : 'Entrega'}</Text>
+        <View style={styles.meta}>
+          <View style={styles.metaItem}><Text style={styles.metaIcon}>🕐</Text><Text style={styles.metaText}>{item.delivery_time?.substring(0, 5) || '12:00'}</Text></View>
+          <View style={styles.metaItem}><Text style={styles.metaIcon}>👥</Text><Text style={styles.metaText}>{item.diners_count || 0}</Text></View>
+          <View style={styles.metaItem}><Text style={styles.metaIcon}>{item.is_pickup ? '📦' : '🏠'}</Text><Text style={styles.metaText}>{item.is_pickup ? 'Recoger' : 'Entrega'}</Text></View>
         </View>
 
         {item.items && item.items.length > 0 && (
           <View style={styles.items}>
-            {item.items.map((it) => (
-              <Text key={it.id} style={styles.itemText}>
-                {it.portions}x {it.dish_name}
-              </Text>
+            {item.items.map(it => (
+              <View key={it.id} style={styles.itemRow}>
+                <Text style={styles.itemQty}>{it.portions}x</Text>
+                <Text style={styles.itemName}>{it.dish_name}</Text>
+              </View>
             ))}
           </View>
         )}
 
         <View style={styles.footer}>
-          <Text style={styles.total}>${Number(item.total_amount).toFixed(2)}</Text>
-          {canAdvance && next && (
+          <Text style={styles.total}>${Number(item.total_amount || 0).toFixed(2)}</Text>
+          {canAdvance && nextId && (
             <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: STATUS_COLORS[next.id] }]}
-              onPress={() => handleStatusChange(item.id, next.id)}
+              style={[styles.actionBtn, { backgroundColor: STATUS_COLORS[nextId] }]}
+              onPress={() => advance(item.id, nextId)}
+              activeOpacity={0.8}
             >
-              <Text style={styles.actionBtnText}>{next.label}</Text>
+              <Text style={styles.actionText}>▶ {STATUS_LABELS[nextId]}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -137,22 +98,22 @@ export default function OrdersScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Filtros */}
-      <View style={styles.filters}>
+    <View style={styles.root}>
+      {/* Filters */}
+      <View style={styles.filterBar}>
         <TouchableOpacity
-          style={[styles.filterBtn, !selectedStatus && styles.filterBtnActive]}
-          onPress={() => setSelectedStatus(null)}
+          style={[styles.filterBtn, !filter && styles.filterActive]}
+          onPress={() => setFilter(null)}
         >
-          <Text style={[styles.filterText, !selectedStatus && styles.filterTextActive]}>Todas</Text>
+          <Text style={[styles.filterText, !filter && styles.filterTextActive]}>Todas</Text>
         </TouchableOpacity>
-        {statusFilters.map((s) => (
+        {visible.map(s => (
           <TouchableOpacity
             key={s}
-            style={[styles.filterBtn, selectedStatus === s && { backgroundColor: STATUS_COLORS[s] }]}
-            onPress={() => setSelectedStatus(selectedStatus === s ? null : s)}
+            style={[styles.filterBtn, filter === s && { backgroundColor: STATUS_COLORS[s] + '20', borderColor: STATUS_COLORS[s] }]}
+            onPress={() => setFilter(filter === s ? null : s)}
           >
-            <Text style={[styles.filterText, selectedStatus === s && { color: '#fff' }]}>
+            <Text style={[styles.filterText, filter === s && { color: STATUS_COLORS[s], fontWeight: '700' }]}>
               {STATUS_LABELS[s]}
             </Text>
           </TouchableOpacity>
@@ -162,11 +123,16 @@ export default function OrdersScreen() {
       <FlatList
         data={filtered}
         renderItem={renderOrder}
-        keyExtractor={(item) => String(item.id)}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        keyExtractor={i => String(i.id)}
+        refreshing={refreshing}
+        onRefresh={() => { setRefreshing(true); load().then(() => setRefreshing(false)); }}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <Text style={styles.empty}>No hay órdenes</Text>
+          <View style={styles.empty}>
+            <Text style={styles.emptyIcon}>📋</Text>
+            <Text style={styles.emptyTitle}>Sin órdenes</Text>
+            <Text style={styles.emptySub}>No hay órdenes con este filtro</Text>
+          </View>
         }
       />
     </View>
@@ -174,35 +140,51 @@ export default function OrdersScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f3f4f6' },
-  filters: {
-    flexDirection: 'row', flexWrap: 'wrap', padding: 12, gap: 6,
-    backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e5e7eb',
+  root: { flex: 1, backgroundColor: Colors.bg },
+  filterBar: {
+    flexDirection: 'row', flexWrap: 'wrap', padding: Spacing.sm, gap: 6,
+    backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.surfaceBorder,
   },
   filterBtn: {
-    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
-    backgroundColor: '#f3f4f6',
+    paddingHorizontal: 12, paddingVertical: 7, borderRadius: Radius.pill,
+    backgroundColor: Colors.bgAlt, borderWidth: 1, borderColor: 'transparent',
   },
-  filterBtnActive: { backgroundColor: '#f97316' },
-  filterText: { fontSize: 12, color: '#4b5563', fontWeight: '500' },
-  filterTextActive: { color: '#fff' },
-  list: { padding: 12, paddingBottom: 40 },
+  filterActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  filterText: { fontSize: 12, color: Colors.textMuted, fontWeight: '500' },
+  filterTextActive: { color: Colors.textInverse, fontWeight: '600' },
+
+  list: { padding: Spacing.sm, paddingBottom: 40 },
+
   card: {
-    backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 10,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
+    backgroundColor: Colors.surface, borderRadius: Radius.md,
+    padding: Spacing.md, marginBottom: 10, ...Shadows.sm,
   },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
-  orderId: { fontSize: 18, fontWeight: '700', color: '#1f2937' },
-  customer: { fontSize: 14, color: '#6b7280', marginTop: 2 },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  badgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
-  details: { flexDirection: 'row', gap: 12, marginBottom: 10 },
-  detail: { fontSize: 13, color: '#4b5563' },
-  items: { borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 8, marginBottom: 8 },
-  itemText: { fontSize: 13, color: '#374151', paddingVertical: 1 },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
-  total: { fontSize: 20, fontWeight: '700', color: '#059669' },
-  actionBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
-  actionBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  empty: { textAlign: 'center', color: '#9ca3af', padding: 40, fontSize: 16 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
+  orderId: { fontSize: 18, fontWeight: '700', color: Colors.text },
+  customer: { fontSize: 13, color: Colors.textMuted, marginTop: 2 },
+
+  meta: { flexDirection: 'row', gap: 16, marginBottom: 12 },
+  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  metaIcon: { fontSize: 13 },
+  metaText: { fontSize: 13, color: Colors.textMuted },
+
+  items: {
+    borderTopWidth: 1, borderTopColor: Colors.bgAlt, paddingTop: 10, marginBottom: 12, gap: 4,
+  },
+  itemRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  itemQty: { fontSize: 13, fontWeight: '600', color: Colors.primaryDark, width: 28 },
+  itemName: { fontSize: 13, color: Colors.text },
+
+  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  total: { fontSize: 22, fontWeight: '700', color: Colors.primaryDark },
+  actionBtn: {
+    paddingHorizontal: 16, paddingVertical: 10,
+    borderRadius: Radius.sm, flexDirection: 'row', alignItems: 'center', gap: 4,
+  },
+  actionText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+
+  empty: { alignItems: 'center', paddingVertical: 60 },
+  emptyIcon: { fontSize: 40, marginBottom: 12 },
+  emptyTitle: { fontSize: 16, fontWeight: '600', color: Colors.text },
+  emptySub: { fontSize: 13, color: Colors.textMuted },
 });

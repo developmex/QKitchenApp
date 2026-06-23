@@ -34,16 +34,6 @@ export interface AuthTokens {
 }
 
 export type Role = 'customer' | 'employee' | 'director' | 'admin' | 'kitchen' | 'driver';
-export type OrderStatus = 
-  | 'pending_approval'
-  | 'scheduled'
-  | 'in_process'
-  | 'delayed'
-  | 'ready_for_delivery'
-  | 'on_the_way'
-  | 'delivered_pending_payment'
-  | 'delivered_paid'
-  | 'cancelled';
 
 export interface Order {
   id: number;
@@ -76,7 +66,6 @@ export interface OrderItem {
   portions: number;
   notes?: string;
   status_id: number;
-  status_name: string;
   chef_id?: number;
   container_id?: number;
 }
@@ -92,16 +81,6 @@ export interface Dish {
   image_url?: string;
   menu_id?: number;
   is_active: boolean;
-  ingredients?: RecipeIngredient[];
-}
-
-export interface RecipeIngredient {
-  id: number;
-  ingredient_id: number;
-  ingredient_name: string;
-  amount: number;
-  unit_type_id: number;
-  unit_abbreviation: string;
 }
 
 export interface Ingredient {
@@ -136,44 +115,3 @@ export interface Container {
   image_url?: string;
   is_active: boolean;
 }
-
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: string;
-}
-
-// Mapeo de roles para UI
-export const ROLE_LABELS: Record<number, string> = {
-  1: 'Cliente',
-  2: 'Empleado',
-  3: 'Director',
-  4: 'Administrador',
-  5: 'Cocina',
-  6: 'Chofer',
-};
-
-export const STATUS_LABELS: Record<number, string> = {
-  1: 'Pendiente',
-  2: 'Programado',
-  3: 'En proceso',
-  4: 'Demorado',
-  5: 'Listo para entrega',
-  6: 'En camino',
-  7: 'Entregado (pago pendiente)',
-  8: 'Entregado (pagado)',
-  9: 'Cancelado',
-};
-
-export const STATUS_COLORS: Record<number, string> = {
-  1: '#f59e0b',
-  2: '#3b82f6',
-  3: '#8b5cf6',
-  4: '#ef4444',
-  5: '#10b981',
-  6: '#06b6d4',
-  7: '#f97316',
-  8: '#22c55e',
-  9: '#6b7280',
-};
