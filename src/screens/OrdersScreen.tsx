@@ -26,7 +26,7 @@ export default function OrdersScreen() {
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
-    if (role !== 'kitchen' && role !== 'admin') return;
+    if (role !== 'kitchen' && role !== 'admin' && role !== 'director') return;
     const t = setInterval(load, 30000);
     return () => clearInterval(t);
   }, [role, load]);
@@ -51,7 +51,7 @@ export default function OrdersScreen() {
     const canAdvance = nextId && (
       (role === 'kitchen' && [2, 3, 5].includes(nextId)) ||
       (role === 'driver' && [5, 6, 7].includes(nextId)) ||
-      role === 'admin'
+      role === 'admin' || role === 'director'
     );
 
     return (

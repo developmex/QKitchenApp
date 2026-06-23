@@ -22,6 +22,10 @@ function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focu
 }
 
 function MainTabs() {
+  const role = useAuthStore((s) => s.role);
+  const isStaff = role === 'admin' || role === 'director' || role === 'kitchen' || role === 'driver' || role === 'employee';
+  const isCustomer = role === 'customer';
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -40,10 +44,14 @@ function MainTabs() {
         tabBarInactiveTintColor: Colors.textMuted,
       }}
     >
-      <Tab.Screen name="Dashboard" component={DashboardScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" label="Inicio" focused={focused} /> }} />
-      <Tab.Screen name="Orders" component={OrdersScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="📋" label="Órdenes" focused={focused} /> }} />
+      {isStaff && (
+        <Tab.Screen name="Dashboard" component={DashboardScreen}
+          options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" label="Inicio" focused={focused} /> }} />
+      )}
+      {(isStaff || isCustomer) && (
+        <Tab.Screen name="Orders" component={OrdersScreen}
+          options={{ tabBarIcon: ({ focused }) => <TabIcon emoji={isCustomer ? "🍽️" : "📋"} label={isCustomer ? "Menú" : "Órdenes"} focused={focused} /> }} />
+      )}
     </Tab.Navigator>
   );
 }
