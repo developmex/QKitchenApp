@@ -1,8 +1,8 @@
 import { useAuthStore } from '../stores/authStore';
 
-const BASE_URL = __DEV__
-  ? 'http://localhost:8090/Q-Kitchen/QKitchenApi'
-  : 'https://qkitchen.app/QKitchenApi';
+// En desarrollo local: cambia a 'http://<tu-ip>:8090/Q-Kitchen/QKitchenApi'
+// En producción: https://qkitchen.app/QKitchenApi (hermes212 con SSL)
+const BASE_URL = 'https://qkitchen.app/Q-Kitchen/QKitchenApi';
 
 interface FetchOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
