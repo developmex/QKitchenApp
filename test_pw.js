@@ -5,7 +5,7 @@ const path = require('path');
 const DIR = '/home/juanman/evidencias';
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
   const page = await browser.newPage({ viewport: { width: 412, height: 915 } });
 
   // Step 1: Login page
