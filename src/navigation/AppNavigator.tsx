@@ -11,6 +11,7 @@ import DashboardScreen from '../screens/DashboardScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import OrderDetailScreen from '../screens/OrderDetailScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import CustomerMenuScreen from '../screens/CustomerMenuScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -52,7 +53,7 @@ function MainTabs() {
           options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" label="Inicio" focused={focused} /> }} />
       )}
       {(isStaff || isCustomer) && (
-        <Tab.Screen name="Orders" component={OrdersScreen}
+        <Tab.Screen name={isCustomer ? "Menu" : "Orders"} component={isCustomer ? CustomerMenuScreen : OrdersScreen}
           options={{ tabBarIcon: ({ focused }) => <TabIcon emoji={isCustomer ? "🍽️" : "📋"} label={isCustomer ? "Menú" : "Órdenes"} focused={focused} /> }} />
       )}
       <Tab.Screen name="Settings" component={SettingsScreen}
