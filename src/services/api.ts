@@ -66,17 +66,17 @@ class ApiClient {
   }
 
   async refreshToken(refreshToken: string) {
-    return this.request('/auth/refresh', { method: 'POST', body: { refresh_token: refreshToken } });
+    return this.request('/refresh-token', { method: 'POST', body: { refresh_token: refreshToken } });
   }
 
   async logout() {
     const { token } = useAuthStore.getState();
-    return this.request('/auth/logout', { method: 'POST', headers: token ? { Authorization: `Bearer ${token}` } : {} });
+    return this.request('/logout', { method: 'POST', headers: token ? { Authorization: *** ${token}` } : {} });
   }
 
   // ── Dashboard ──
   async getDashboard() {
-    return this.request<any>('/dashboard');
+    return this.request<any>('/dashboard/metrics');
   }
 
   // ── Orders ──
