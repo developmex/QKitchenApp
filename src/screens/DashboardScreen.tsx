@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../stores/authStore';
 import { api } from '../services/api';
 import type { Order } from '../types';
@@ -8,6 +9,7 @@ import StatusBadge from '../components/StatusBadge';
 
 export default function DashboardScreen() {
   const user = useAuthStore((s) => s.user);
+  const navigation = useNavigation<any>();
   const [orders, setOrders] = useState<Order[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState({ total: 0, pending: 0, inProcess: 0, done: 0 });
@@ -71,7 +73,12 @@ export default function DashboardScreen() {
           </View>
         ) : (
           orders.map((order) => (
-            <View key={order.id} style={styles.orderCard}>
+            <TouchableOpacity
+              key={order.id}
+              style={styles.orderCard}
+              onPress={() => navigation.navigate('OrderDetail', { orderId: order.id })}
+              activeOpacity={0.7}
+            >
               <View style={styles.orderHeader}>
                 <Text style={styles.orderId}>#{order.id}</Text>
                 <StatusBadge statusId={order.status_id} />
@@ -96,7 +103,7 @@ export default function DashboardScreen() {
                   )}
                 </View>
               )}
-            </View>
+            </TouchableOpacity>
           ))
         )}
       </View>

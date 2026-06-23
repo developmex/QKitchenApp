@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../stores/authStore';
 import { api } from '../services/api';
 import { Colors, Radius, Shadows, Spacing } from '../utils/theme';
@@ -13,6 +14,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const setSession = useAuthStore((s) => s.setSession);
+  const navigation = useNavigation<any>();
 
   const handleLogin = async () => {
     if (!email.trim() || !password) { setError('Ingresa email y contraseña'); return; }
@@ -78,7 +80,7 @@ export default function LoginScreen() {
         />
 
         <Button title="Entrar" onPress={handleLogin} loading={loading} style={{ marginTop: Spacing.sm }} />
-        <Button title="Crear cuenta" onPress={() => {}} variant="outline" style={{ marginTop: Spacing.sm }} />
+        <Button title="Crear cuenta" onPress={() => navigation.navigate('Register')} variant="outline" style={{ marginTop: Spacing.sm }} />
       </View>
     </KeyboardAvoidingView>
   );
