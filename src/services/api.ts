@@ -15,7 +15,7 @@ class ApiClient {
       'Content-Type': 'application/json',
     };
     if (token) headers['Authorization'] = 'Bearer ' + token;
-    if (companyId) headers['X-Company-ID'] = String(companyId);
+    if (token && companyId) headers['X-Company-ID'] = String(companyId);
     return headers;
   }
 

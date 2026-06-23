@@ -1,6 +1,34 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
 import type { User, Company, Role } from '../types';
+
+// SecureStore fallback for web
+let SecureStore: any;
+try {
+  SecureStore = require('expo-secure-store');
+} catch {
+  SecureStore = null;
+}
+
+const safeGet = async (key: string): Promise<string | null> => {
+  try {
+    if (SecureStore?.getItemAsync) return await SecureStore.getItemAsync(key);
+  } catch {}
+  return localStorage.getItem(key);
+};
+
+const safeSet = async (key: string, value: string): Promise<void> => {
+  try {
+    if (SecureStore?.setItemAsync) { await SecureStore.setItemAsync(key, value); return; }
+  } catch {}
+  localStorage.setItem(key, value);
+};
+
+const safeDelete = async (key: string): Promise<void> => {
+  try {
+    if (SecureStore?.deleteItemAsync) { await SecureStore.deleteItemAsync(key); return; }
+  } catch {}
+  localStorage.removeItem(key);
+};
 
 interface AuthState {
   token: string | null;
@@ -43,10 +71,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   role: 'customer',
 
   setSession: async (token, refreshToken, user, company) => {
-    await SecureStore.setItemAsync(KEYS.ACCESS_TOKEN, token);
-    await SecureStore.setItemAsync(KEYS.REFRESH_TOKEN, refreshToken);
-    await SecureStore.setItemAsync(KEYS.USER_DATA, JSON.stringify(user));
-    await SecureStore.setItemAsync(KEYS.COMPANY_DATA, JSON.stringify(company));
+    await safeSet(KEYS.ACCESS_TOKEN, token);
+    await safeSet(KEYS.REFRESH_TOKEN, refreshToken);
+    await safeSet(KEYS.USER_DATA, JSON.stringify(user));
+    await safeSet(KEYS.COMPANY_DATA, JSON.stringify(company));
 
     set({
       token,
@@ -60,10 +88,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
-    await SecureStore.deleteItemAsync(KEYS.ACCESS_TOKEN);
-    await SecureStore.deleteItemAsync(KEYS.REFRESH_TOKEN);
-    await SecureStore.deleteItemAsync(KEYS.USER_DATA);
-    await SecureStore.deleteItemAsync(KEYS.COMPANY_DATA);
+    await safeDelete(KEYS.ACCESS_TOKEN);
+    await safeDelete(KEYS.REFRESH_TOKEN);
+    await safeDelete(KEYS.USER_DATA);
+    await safeDelete(KEYS.COMPANY_DATA);
 
     set({
       token: null,
@@ -77,10 +105,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   loadSession: async () => {
     try {
-      const token = await SecureStore.getItemAsync(KEYS.ACCESS_TOKEN);
-      const refreshToken = await SecureStore.getItemAsync(KEYS.REFRESH_TOKEN);
-      const userStr = await SecureStore.getItemAsync(KEYS.USER_DATA);
-      const companyStr = await SecureStore.getItemAsync(KEYS.COMPANY_DATA);
+      const token = await safeGet(KEYS.ACCESS_TOKEN);
+      const refreshToken = await safeGet(KEYS.REFRESH_TOKEN);
+      const userStr = await safeGet(KEYS.USER_DATA);
+      const companyStr = await safeGet(KEYS.COMPANY_DATA);
 
       if (token && userStr) {
         const user = JSON.parse(userStr) as User;
