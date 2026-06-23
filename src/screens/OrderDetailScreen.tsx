@@ -15,6 +15,8 @@ export default function OrderDetailScreen({ route }: any) {
       try {
         const res = await api.getOrder(orderId);
         const ord = (res.order || res.data || res) as Order;
+        // API retorna items a nivel raíz, no dentro de order
+        if (!ord.items && res.items) { (ord as any).items = res.items; }
         // API devuelve is_pickup como 0/1, no boolean
         if (typeof ord.is_pickup === 'number') {
           (ord as any).is_pickup = ord.is_pickup === 1;

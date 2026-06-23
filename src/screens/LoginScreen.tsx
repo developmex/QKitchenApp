@@ -24,7 +24,12 @@ export default function LoginScreen() {
       const data = res.data || res;
       const tok = data.access_token || data.accessToken || data.token || '';
       const refTok = data.refresh_token || data.refreshToken || tok;
-      const usr = data.user || {};
+      let usr = data.user || {};
+      // API retorna user.name como "Admin Test" — separar en first/last
+      if (usr.name && !usr.first_name) {
+        const parts = (usr.name || '').split(' ');
+        usr = { ...usr, first_name: parts[0] || '', last_name: parts.slice(1).join(' ') || '' };
+      }
       const comp = data.company || { id: usr.company_id || 1, name: 'Q-Kitchen', slug: data.company_slug || 'qkitchen' };
       await setSession(tok, refTok, usr, comp);
     } catch (e: any) {

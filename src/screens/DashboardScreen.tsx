@@ -18,7 +18,16 @@ export default function DashboardScreen() {
     try {
       const res = await api.getOrders();
       const list = res.data || res || [];
-      const arr = Array.isArray(list) ? list : list?.orders || [];
+      const raw = Array.isArray(list) ? list : list?.orders || [];
+      // Normalizar campos de API → lo que espera el UI
+      const arr = raw.map((o: any) => ({
+        ...o,
+        customer_name: o.customer || o.customer_name,
+        total_amount: Number(o.total || o.total_amount || 0),
+        items: typeof o.dishes === 'string'
+          ? o.dishes.split(',').map((d: string, i: number) => ({ id: i, dish_name: d.trim(), portions: 1 }))
+          : (o.items || []),
+      }));
       setOrders(arr);
       setStats({
         total: arr.length,

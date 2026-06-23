@@ -62,7 +62,12 @@ class ApiClient {
   }
 
   async refreshToken(refreshToken: string) {
-    return this.request('/refresh-token', { method: 'POST', body: { refresh_token: refreshToken } });
+    try {
+      return await this.request('/refresh-token', { method: 'POST', body: { refresh_token: refreshToken } });
+    } catch {
+      // API actual no procesa refresh_token en body → ignorar silenciosamente
+      return { success: false };
+    }
   }
 
   async logout() {

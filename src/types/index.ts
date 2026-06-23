@@ -76,6 +76,8 @@ export interface Dish {
   name: string;
   description?: string;
   base_price: number;
+  // API usa price_per_portion, normalizar en el adapter
+  price_per_portion?: string;
   min_portions: number;
   max_portions?: number;
   image_url?: string;
