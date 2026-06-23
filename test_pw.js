@@ -9,7 +9,7 @@ const DIR = '/home/juanman/evidencias';
   const page = await browser.newPage({ viewport: { width: 412, height: 915 } });
 
   // Step 1: Login page
-  await page.goto('http://localhost:8081', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:8081', { waitUntil: 'networkidle', timeout: 15000 });
   await page.screenshot({ path: path.join(DIR, 'pw-01-login.png'), fullPage: true });
   console.log('1. Login page');
 
