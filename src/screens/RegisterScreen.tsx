@@ -46,8 +46,12 @@ export default function RegisterScreen({ navigation }: any) {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -60}
+    >
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" bounces={false}>
         <View style={styles.topSection}>
           <Text style={styles.brandName}>Q-Kitchen</Text>
           <Text style={styles.tagline}>Crear cuenta nueva</Text>
@@ -73,6 +77,8 @@ export default function RegisterScreen({ navigation }: any) {
           <Button title="Crear cuenta" onPress={handleRegister} loading={loading} style={{ marginTop: Spacing.sm }} />
           <Button title="Volver al login" onPress={() => navigation.goBack()} variant="outline" style={{ marginTop: Spacing.sm }} />
         </View>
+
+        <Text style={styles.footer}>by monographics</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -92,6 +98,15 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg, marginTop: -Spacing.lg,
     backgroundColor: Colors.surface, borderRadius: Radius.lg,
     padding: Spacing.lg, ...Shadows.lg,
+  },
+  footer: {
+    textAlign: 'center',
+    fontSize: 11,
+    color: Colors.textLight,
+    fontWeight: '500',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    paddingVertical: Spacing.lg,
   },
   label: {
     fontSize: 13, fontWeight: '600', color: Colors.textMuted,

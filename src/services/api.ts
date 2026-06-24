@@ -122,6 +122,10 @@ class ApiClient {
   async getStaff() {
     return this.request('/employee');
   }
+
+  async updateProfile(data: Record<string, unknown>) {
+    return this.request('/user', { method: 'PUT', body: data });
+  }
 }
 
 export const api = new ApiClient();

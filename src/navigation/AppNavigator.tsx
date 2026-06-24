@@ -17,10 +17,10 @@ import NewOrderScreen from '../screens/NewOrderScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focused: boolean }) {
+function TabIcon({ label, focused, icon }: { label: string; focused: boolean; icon: string }) {
   return (
     <View style={styles.tabItem}>
-      <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>{emoji}</Text>
+      <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>{icon}</Text>
       <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
     </View>
   );
@@ -51,14 +51,14 @@ function MainTabs() {
     >
       {isStaff && (
         <Tab.Screen name="Dashboard" component={DashboardScreen}
-          options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" label="Inicio" focused={focused} /> }} />
+          options={{ tabBarIcon: ({ focused }) => <TabIcon icon="◇" label="Inicio" focused={focused} /> }} />
       )}
       {(isStaff || isCustomer) && (
         <Tab.Screen name={isCustomer ? "Menu" : "Orders"} component={isCustomer ? CustomerMenuScreen : OrdersScreen}
-          options={{ tabBarIcon: ({ focused }) => <TabIcon emoji={isCustomer ? "🍽️" : "📋"} label={isCustomer ? "Menú" : "Órdenes"} focused={focused} /> }} />
+          options={{ tabBarIcon: ({ focused }) => <TabIcon icon={isCustomer ? "▤" : "☰"} label={isCustomer ? "Menú" : "Órdenes"} focused={focused} /> }} />
       )}
       <Tab.Screen name="Settings" component={SettingsScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="⚙️" label="Ajustes" focused={focused} /> }} />
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="◎" label="Ajustes" focused={focused} /> }} />
     </Tab.Navigator>
   );
 }
@@ -121,8 +121,8 @@ const styles = StyleSheet.create({
   loading: { flex: 1, backgroundColor: Colors.bg, alignItems: 'center', justifyContent: 'center' },
   loadingText: { fontSize: 16, color: Colors.textMuted },
   tabItem: { alignItems: 'center', justifyContent: 'center', width: 64 },
-  tabEmoji: { fontSize: 22, opacity: 0.4 },
-  tabEmojiActive: { opacity: 1 },
+  tabIcon: { fontSize: 20, color: Colors.textMuted, opacity: 0.5 },
+  tabIconActive: { color: Colors.primary, opacity: 1 },
   tabLabel: { fontSize: 10, color: Colors.textMuted, marginTop: 2 },
   tabLabelActive: { color: Colors.primary, fontWeight: '600' },
 });

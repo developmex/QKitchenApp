@@ -41,6 +41,7 @@ interface AuthState {
   role: Role;
 
   setSession: (token: string, refreshToken: string, user: User, company: Company) => Promise<void>;
+  setUser: (user: Partial<User>) => void;
   logout: () => Promise<void>;
   loadSession: () => Promise<void>;
 }
@@ -101,6 +102,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       isAuthenticated: false,
       role: 'customer',
     });
+  },
+
+  setUser: (partialUser) => {
+    const current = get().user;
+    if (!current) return;
+    const updated = { ...current, ...partialUser };
+    safeSet(KEYS.USER_DATA, JSON.stringify(updated));
+    set({ user: updated });
   },
 
   loadSession: async () => {

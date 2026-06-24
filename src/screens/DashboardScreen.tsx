@@ -65,10 +65,10 @@ export default function DashboardScreen() {
 
       {/* Stats */}
       <View style={styles.statsRow}>
-        <Stat label="Total" value={stats.total} color={Colors.primary} icon="📋" />
-        <Stat label="Pendientes" value={stats.pending} color={Colors.gold} icon="⏳" />
-        <Stat label="En proceso" value={stats.inProcess} color={Colors.accent} icon="🔥" />
-        <Stat label="Completadas" value={stats.done} color={Colors.success} icon="✅" />
+        <Stat label="Total" value={stats.total} color={Colors.primary} icon="□" />
+        <Stat label="Pendientes" value={stats.pending} color={Colors.gold} icon="◷" />
+        <Stat label="En proceso" value={stats.inProcess} color={Colors.accent} icon="»" />
+        <Stat label="Completadas" value={stats.done} color={Colors.success} icon="✓" />
       </View>
 
       {/* Orders */}
@@ -76,7 +76,7 @@ export default function DashboardScreen() {
         <Text style={styles.sectionTitle}>Órdenes del día</Text>
         {orders.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>📭</Text>
+            <Text style={styles.emptyIcon}>○</Text>
             <Text style={styles.emptyTitle}>Sin órdenes hoy</Text>
             <Text style={styles.emptySub}>Las órdenes aparecerán aquí cuando las crees</Text>
           </View>
@@ -95,8 +95,8 @@ export default function DashboardScreen() {
               <View style={styles.orderBody}>
                 <View style={styles.orderInfo}>
                   <Text style={styles.orderCustomer}>{order.customer_name || 'Cliente'}</Text>
-                  <Text style={styles.orderTime}>🕐 {order.delivery_time?.substring(0, 5) || '12:00'}</Text>
-                  <Text style={styles.orderPeople}>👥 {order.diners_count || 0} personas</Text>
+                  <Text style={styles.orderTime}>◷ {order.delivery_time?.substring(0, 5) || '12:00'}</Text>
+                  <Text style={styles.orderPeople}>◆ {order.diners_count || 0} personas</Text>
                 </View>
                 <Text style={styles.orderTotal}>${Number(order.total_amount || 0).toFixed(2)}</Text>
               </View>

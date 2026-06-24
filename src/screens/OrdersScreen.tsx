@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, SafeAreaView, StatusBar, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { api } from '../services/api';
 import { useAuthStore } from '../stores/authStore';
@@ -75,9 +75,9 @@ export default function OrdersScreen() {
         </View>
 
         <View style={styles.meta}>
-          <View style={styles.metaItem}><Text style={styles.metaIcon}>🕐</Text><Text style={styles.metaText}>{item.delivery_time?.substring(0, 5) || '12:00'}</Text></View>
-          <View style={styles.metaItem}><Text style={styles.metaIcon}>👥</Text><Text style={styles.metaText}>{item.diners_count || 0}</Text></View>
-          <View style={styles.metaItem}><Text style={styles.metaIcon}>{item.is_pickup ? '📦' : '🏠'}</Text><Text style={styles.metaText}>{item.is_pickup ? 'Recoger' : 'Entrega'}</Text></View>
+          <View style={styles.metaItem}><Text style={styles.metaIcon}>◷</Text><Text style={styles.metaText}>{item.delivery_time?.substring(0, 5) || '12:00'}</Text></View>
+          <View style={styles.metaItem}><Text style={styles.metaIcon}>◆</Text><Text style={styles.metaText}>{item.diners_count || 0}</Text></View>
+          <View style={styles.metaItem}><Text style={styles.metaIcon}>{item.is_pickup ? '☐' : '⌂'}</Text><Text style={styles.metaText}>{item.is_pickup ? 'Recoger' : 'Entrega'}</Text></View>
         </View>
 
         {item.items && item.items.length > 0 && (
@@ -108,7 +108,8 @@ export default function OrdersScreen() {
   };
 
   return (
-    <View style={styles.root}>
+    <SafeAreaView style={styles.root} edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.surface} />
       {/* Filters */}
       <View style={styles.filterBar}>
         <TouchableOpacity
@@ -143,13 +144,13 @@ export default function OrdersScreen() {
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>📋</Text>
+            <Text style={styles.emptyIcon}>○</Text>
             <Text style={styles.emptyTitle}>Sin órdenes</Text>
             <Text style={styles.emptySub}>No hay órdenes con este filtro</Text>
           </View>
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

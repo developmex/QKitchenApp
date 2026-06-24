@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform,
+  View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../stores/authStore';
@@ -25,7 +25,6 @@ export default function LoginScreen() {
       const tok = data.access_token || data.accessToken || data.token || '';
       const refTok = data.refresh_token || data.refreshToken || tok;
       let usr = data.user || {};
-      // API retorna user.name como "Admin Test" — separar en first/last
       if (usr.name && !usr.first_name) {
         const parts = (usr.name || '').split(' ');
         usr = { ...usr, first_name: parts[0] || '', last_name: parts.slice(1).join(' ') || '' };
@@ -38,61 +37,69 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.topSection}>
-        <View style={styles.logoCircle}>
-          <Text style={styles.logoIcon}>🥂</Text>
-        </View>
-        <Text style={styles.brandName}>Q-Kitchen</Text>
-        <Text style={styles.tagline}>Catering de excelencia</Text>
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>by PauQuiroga</Text>
-          <View style={styles.dividerLine} />
-        </View>
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Iniciar sesión</Text>
-
-        {error ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{error}</Text>
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -60}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
+      >
+        <View style={styles.topSection}>
+          <View style={styles.logoCircle}>
+            <Text style={styles.logoIcon}>Q</Text>
           </View>
-        ) : null}
+          <Text style={styles.brandName}>Q-Kitchen</Text>
+          <Text style={styles.tagline}>Catering de excelencia</Text>
+        </View>
 
-        <Text style={styles.label}>Email</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="tu@email.com"
-          placeholderTextColor={Colors.textLight}
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          editable={!loading}
-        />
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Iniciar sesión</Text>
 
-        <Text style={styles.label}>Contraseña</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="••••••••"
-          placeholderTextColor={Colors.textLight}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          editable={!loading}
-        />
+          {error ? (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
 
-        <Button title="Entrar" onPress={handleLogin} loading={loading} style={{ marginTop: Spacing.sm }} />
-        <Button title="Crear cuenta" onPress={() => navigation.navigate('Register')} variant="outline" style={{ marginTop: Spacing.sm }} />
-      </View>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="tu@email.com"
+            placeholderTextColor={Colors.textLight}
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            editable={!loading}
+          />
+
+          <Text style={styles.label}>Contraseña</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="••••••••"
+            placeholderTextColor={Colors.textLight}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            editable={!loading}
+          />
+
+          <Button title="Entrar" onPress={handleLogin} loading={loading} style={{ marginTop: Spacing.sm }} />
+          <Button title="Crear cuenta" onPress={() => navigation.navigate('Register')} variant="outline" style={{ marginTop: Spacing.sm }} />
+        </View>
+
+        <Text style={styles.footer}>by monographics</Text>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.bg },
+  scroll: { flexGrow: 1 },
   topSection: {
     alignItems: 'center',
     paddingTop: 80,
@@ -107,7 +114,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     marginBottom: Spacing.md,
   },
-  logoIcon: { fontSize: 36 },
+  logoIcon: { fontSize: 36, fontWeight: '700', color: Colors.textInverse },
   brandName: {
     fontSize: 34, fontWeight: '700', color: Colors.textInverse,
     letterSpacing: 1, marginBottom: 4,
@@ -116,9 +123,15 @@ const styles = StyleSheet.create({
     fontSize: 14, color: 'rgba(255,255,255,0.8)',
     fontWeight: '400', marginBottom: Spacing.md,
   },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  dividerLine: { width: 40, height: 1, backgroundColor: 'rgba(255,255,255,0.3)' },
-  dividerText: { fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: '500', letterSpacing: 2, textTransform: 'uppercase' },
+  footer: {
+    textAlign: 'center',
+    fontSize: 11,
+    color: Colors.textLight,
+    fontWeight: '500',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    paddingVertical: Spacing.lg,
+  },
 
   card: {
     marginHorizontal: Spacing.lg,

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert, TextInput } from 'react-native';
 import { useAuthStore } from '../stores/authStore';
 import { api } from '../services/api';
 import { Colors, Radius, Shadows, Spacing, ROLE_LABELS } from '../utils/theme';
@@ -9,7 +9,40 @@ export default function SettingsScreen() {
   const user = useAuthStore((s) => s.user);
   const company = useAuthStore((s) => s.company);
   const role = useAuthStore((s) => s.role);
+  const setUser = useAuthStore((s) => s.setUser);
   const logout = useAuthStore((s) => s.logout);
+
+  const [editing, setEditing] = useState(false);
+  const [firstName, setFirstName] = useState(user?.first_name || '');
+  const [lastName, setLastName] = useState(user?.last_name || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [language, setLanguage] = useState(user?.language || 'ES');
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!firstName.trim()) {
+      Alert.alert('Error', 'El nombre es obligatorio');
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await api.updateProfile({
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        phone: phone.trim(),
+        language,
+      });
+      const data = res.data || res;
+      const updatedUser = data.user || data;
+      setUser({ ...user, ...updatedUser, first_name: firstName.trim(), last_name: lastName.trim(), phone: phone.trim(), language });
+      setEditing(false);
+      Alert.alert('Perfil actualizado', 'Tus datos se guardaron correctamente');
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'No se pudo actualizar el perfil');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert('Cerrar sesión', '¿Estás seguro?', [
@@ -31,6 +64,22 @@ export default function SettingsScreen() {
     </View>
   );
 
+  const EditableRow = ({ label, value, onChange, placeholder, keyboardType }: {
+    label: string; value: string; onChange: (v: string) => void; placeholder: string; keyboardType?: any;
+  }) => (
+    <View style={styles.row}>
+      <Text style={styles.rowLabel}>{label}</Text>
+      <TextInput
+        style={styles.rowInput}
+        value={value}
+        onChangeText={onChange}
+        placeholder={placeholder}
+        placeholderTextColor={Colors.textLight}
+        keyboardType={keyboardType}
+      />
+    </View>
+  );
+
   return (
     <ScrollView style={styles.root}>
       {/* Header */}
@@ -47,12 +96,51 @@ export default function SettingsScreen() {
 
       {/* Info */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Información</Text>
-        <Row label="Empresa" value={company?.name || 'Q-Kitchen'} />
-        <Row label="Rol" value={ROLE_LABELS[user?.role_id || 1] || role} />
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>Información</Text>
+          {!editing ? (
+            <Button title="Editar" onPress={() => setEditing(true)} variant="outline" style={{ paddingVertical: 6, paddingHorizontal: 16, minHeight: 0 }} />
+          ) : null}
+        </View>
+
+        {editing ? (
+          <>
+            <EditableRow label="Nombre" value={firstName} onChange={setFirstName} placeholder="Tu nombre" />
+            <EditableRow label="Apellido" value={lastName} onChange={setLastName} placeholder="Tu apellido" />
+          </>
+        ) : (
+          <Row label="Nombre" value={`${user?.first_name || ''} ${user?.last_name || ''}`.trim() || '—'} />
+        )}
+
         <Row label="Email" value={user?.email || '—'} />
-        <Row label="Teléfono" value={user?.phone || '—'} />
-        <Row label="Idioma" value={user?.language || 'ES'} />
+
+        {editing ? (
+          <EditableRow label="Teléfono" value={phone} onChange={setPhone} placeholder="+52 555 123 4567" keyboardType="phone-pad" />
+        ) : (
+          <Row label="Teléfono" value={user?.phone || '—'} />
+        )}
+
+        {editing ? (
+          <EditableRow label="Idioma" value={language} onChange={setLanguage} placeholder="ES" />
+        ) : (
+          <Row label="Idioma" value={user?.language || 'ES'} />
+        )}
+
+        {/* Rol: solo lectura */}
+        <Row label="Rol" value={ROLE_LABELS[user?.role_id || 1] || role} />
+
+        {editing && (
+          <View style={styles.editActions}>
+            <Button title="Cancelar" onPress={() => {
+              setFirstName(user?.first_name || '');
+              setLastName(user?.last_name || '');
+              setPhone(user?.phone || '');
+              setLanguage(user?.language || 'ES');
+              setEditing(false);
+            }} variant="outline" style={{ flex: 1 }} />
+            <Button title="Guardar" onPress={handleSave} loading={saving} style={{ flex: 1 }} />
+          </View>
+        )}
       </View>
 
       {/* Logout */}
@@ -61,6 +149,7 @@ export default function SettingsScreen() {
       </View>
 
       <Text style={styles.version}>QKitchen App v1.0.0</Text>
+      <Text style={styles.branding}>by monographics</Text>
       <View style={{ height: 40 }} />
     </ScrollView>
   );
@@ -92,17 +181,38 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface, borderRadius: Radius.md,
     padding: Spacing.md, ...Shadows.sm,
   },
-  cardTitle: { fontSize: 16, fontWeight: '700', color: Colors.text, marginBottom: Spacing.md },
+  cardHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  cardTitle: { fontSize: 16, fontWeight: '700', color: Colors.text },
 
   row: {
-    flexDirection: 'row', justifyContent: 'space-between',
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.bgAlt,
   },
-  rowLabel: { fontSize: 14, color: Colors.textMuted },
-  rowValue: { fontSize: 14, fontWeight: '500', color: Colors.text },
+  rowLabel: { fontSize: 14, color: Colors.textMuted, flex: 1 },
+  rowValue: { fontSize: 14, fontWeight: '500', color: Colors.text, textAlign: 'right', flex: 2 },
+  rowInput: {
+    fontSize: 14, fontWeight: '500', color: Colors.text, textAlign: 'right', flex: 2,
+    backgroundColor: Colors.bgAlt, borderRadius: Radius.sm, padding: 8, borderWidth: 1, borderColor: Colors.surfaceBorder,
+  },
+
+  editActions: {
+    flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.md,
+  },
 
   version: {
     textAlign: 'center', color: Colors.textLight, fontSize: 12,
     marginTop: Spacing.xl,
+  },
+  branding: {
+    textAlign: 'center',
+    fontSize: 11,
+    color: Colors.textLight,
+    fontWeight: '500',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginTop: Spacing.xs,
   },
 });
