@@ -115,6 +115,10 @@ class ApiClient {
     return this.request('/customer');
   }
 
+  async createCustomer(data: Record<string, unknown>) {
+    return this.request('/customer', { method: 'POST', body: data });
+  }
+
   async getStaff() {
     return this.request('/employee');
   }

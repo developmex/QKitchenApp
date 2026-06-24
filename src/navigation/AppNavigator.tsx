@@ -12,6 +12,7 @@ import OrdersScreen from '../screens/OrdersScreen';
 import OrderDetailScreen from '../screens/OrderDetailScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import CustomerMenuScreen from '../screens/CustomerMenuScreen';
+import NewOrderScreen from '../screens/NewOrderScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -87,6 +88,15 @@ export default function AppNavigator() {
                 headerStyle: { backgroundColor: Colors.primary },
                 headerTintColor: Colors.textInverse,
                 headerShadowVisible: false,
+              }} />
+            <Stack.Screen name="NewOrder" component={NewOrderScreen}
+              options={{
+                headerShown: true,
+                headerTitle: 'Nuevo Pedido',
+                headerStyle: { backgroundColor: Colors.primary },
+                headerTintColor: Colors.textInverse,
+                headerShadowVisible: false,
+                presentation: 'modal',
               }} />
           </>
         ) : (

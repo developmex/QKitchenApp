@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { api } from '../services/api';
 import { useAuthStore } from '../stores/authStore';
 import type { Order } from '../types';
@@ -12,6 +13,7 @@ const STATUS_FLOW: Record<number, number> = {
 
 export default function OrdersScreen() {
   const role = useAuthStore((s) => s.role);
+  const navigation = useNavigation<any>();
   const [orders, setOrders] = useState<Order[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<number | null>(null);
@@ -126,6 +128,10 @@ export default function OrdersScreen() {
             </Text>
           </TouchableOpacity>
         ))}
+        <View style={{ flex: 1 }} />
+        <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('NewOrder')}>
+          <Text style={styles.addBtnText}>+ Nuevo</Text>
+        </TouchableOpacity>
       </View>
 
       <FlatList
@@ -160,6 +166,8 @@ const styles = StyleSheet.create({
   filterActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   filterText: { fontSize: 12, color: Colors.textMuted, fontWeight: '500' },
   filterTextActive: { color: Colors.textInverse, fontWeight: '600' },
+  addBtn: { backgroundColor: Colors.primary, paddingHorizontal: 14, paddingVertical: 7, borderRadius: Radius.pill },
+  addBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
 
   list: { padding: Spacing.sm, paddingBottom: 40 },
 
